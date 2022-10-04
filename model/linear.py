@@ -16,7 +16,7 @@ class Linear(Layer):
         self.batch_norm = BatchNormalization()
 
 
-    def call(self, x, cell_mask, is_training):
+    def call(self, x, is_training):
         """
         Args:
             x (tensor): Input with shape (..., num_cells, d_model)
@@ -35,8 +35,6 @@ class Linear(Layer):
         out = self.top(out)
 
         out = tf.reshape(out, (-1, num_cells))  # shape (..., num_cells)
-
-        out = tf.math.multiply(out, cell_mask)  # shape (..., num_cells)
 
         return out
         

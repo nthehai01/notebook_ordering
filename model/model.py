@@ -56,16 +56,16 @@ class Model(tf.keras.Model):
         # CODE ENCODING
         code_embeddings = self.code_encoder(code_input_ids, code_attention_mask)  # shape (..., max_cells, max_len, d_model)
         code_embeddings = self.code_attention_pooling(code_embeddings)  # shape (..., max_cells, d_model)
-        code_embeddings = self.positional_encoder(code_embeddings)  # shape (..., max_cells, d_model)
+        code_embeddings = self.positional_encoder(code_embeddings, is_training)  # shape (..., max_cells, d_model)
 
-
+        
         # MARKDOWN ENCODING
         md_embeddings = self.md_encoder(md_input_ids, md_attention_mask)  # shape (..., max_cells, max_len, d_model)
         md_embeddings = self.md_attention_pooling(md_embeddings)  # shape (..., max_cells, d_model)
 
 
         # TRANSFORMER DECODER
-        out = self.decoder(md_embeddings, code_embeddings)  # shape (..., max_cells, d_model)
+        out = self.decoder(md_embeddings, code_embeddings, is_training)  # shape (..., max_cells, d_model)
 
 
         # LINEAR
