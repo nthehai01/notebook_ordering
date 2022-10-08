@@ -11,6 +11,9 @@ class Linear(Layer):
         
         super(Linear, self).__init__()
         self.ff = Dense(d_ff, activation='relu')
+        self.ff2 = Dense(512, activation='relu')
+        self.ff3 = Dense(256, activation='relu')
+        self.ff4 = Dense(64, activation='relu')
         self.dropout = Dropout(dropout)
         self.top = Dense(1, activation='sigmoid')
         self.batch_norm = BatchNormalization()
@@ -32,6 +35,12 @@ class Linear(Layer):
 
         out = self.ff(x)
         out = self.dropout(out, training=is_training)
+        out = self.ff2(out)
+        out = self.dropout(out, training=is_training)
+        out = self.ff3(out)
+        
+        out = self.ff4(out)
+        
         out = self.top(out)
 
         out = tf.reshape(out, (-1, num_cells))  # shape (..., num_cells)

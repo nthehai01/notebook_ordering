@@ -72,3 +72,4 @@ class Model(tf.keras.Model):
         out = self.linear(out, is_training)  # shape (..., max_cells)
 
         return out
+        
