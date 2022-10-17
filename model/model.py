@@ -11,8 +11,7 @@ class Model(tf.keras.Model):
     def __init__(self, model_path, d_model, 
                 max_cells, dropout_pos,
                 num_decoder_layers,
-                n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers,
-                dropout_pointwise):
+                n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers):
         """
         Args:
             model_path (str): Path of the pre-trained model.
@@ -26,7 +25,6 @@ class Model(tf.keras.Model):
             ff_activation (str): Activation function of the feed forward layer.
             n_layers (int): Number of transformer encoder blocks to be stacked.
             d_ff_pointwise (int): Dimension of the feed forward layer for the PointwiseHead.
-            dropout_pointwise (float): Dropout rate for the PointwiseHead.
         """
         
         super(Model, self).__init__()
@@ -36,7 +34,7 @@ class Model(tf.keras.Model):
         self.md_attention_pooling = AttentionPooling(d_model)
         self.positional_encoder = PositionalEncoder(d_model, max_cells, dropout_pos)
         self.decoder = DecoderLayer(num_decoder_layers, d_model, n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers)
-        self.linear = Linear(dropout_pointwise)
+        self.linear = Linear()
 
 
     def call(self, code_input_ids, code_attention_mask, 
@@ -66,11 +64,11 @@ class Model(tf.keras.Model):
 
 
         # TRANSFORMER DECODER
-        out = self.DecoderLayer(code_embeddings, md_embeddings, is_training)  # shape (..., max_cells, d_model)
+        out = self.decoder(code_embeddings, md_embeddings, is_training)  # shape (..., max_cells, d_model)
 
 
         # LINEAR
-        out = self.linear(out, is_training)  # shape (..., max_cells)
-
+        out = self.linear(out)  # shape (..., max_cells)
+        
         return out
         

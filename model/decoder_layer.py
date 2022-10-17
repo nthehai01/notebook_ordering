@@ -17,7 +17,8 @@ class DecoderLayer(Layer):
         """
         
         super(DecoderLayer, self).__init__()
-        self.code_decoders = [TransformerDecoder(d_model, d_model, n_heads, dropout, eps, d_ff, ff_activation, n_layers) for _ in range(num_decoder_layers)]
+        self.num_decoder_layers = num_decoder_layers
+        self.code_decoders = [TransformerDecoder(d_model, n_heads, dropout, eps, d_ff, ff_activation, n_layers) for _ in range(num_decoder_layers)]
         self.md_decoders = [TransformerDecoder(d_model, n_heads, dropout, eps, d_ff, ff_activation, n_layers) for _ in range(num_decoder_layers)]
 
 

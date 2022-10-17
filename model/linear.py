@@ -2,40 +2,28 @@ import tensorflow as tf
 from tensorflow.keras.layers import Layer, Dense, Dropout, BatchNormalization
 
 class Linear(Layer):
-    def __init__(self, dropout):
-        """
-        Args:
-            dropout (float): Dropout rate.
-        """
-        
+    def __init__(self):
         super(Linear, self).__init__()
-        self.ff1 = Dense(256, activation='relu')
-        self.ff2 = Dense(64, activation='relu')
-        self.dropout = Dropout(dropout)
-        self.top = Dense(1, activation='sigmoid')
-        # self.batch_norm = BatchNormalization()
+        self.linear = tf.keras.Sequential([
+            Dense(256, activation='relu'),
+            Dense(64, activation='relu'),
+            Dense(1, activation='sigmoid')
+        ])
 
 
-    def call(self, x, is_training):
+    def call(self, x):
         """
         Args:
             x (tensor): Input with shape (..., num_cells, d_model)
-            is_training (bool): Whether the model is being trained.
         Returns:
             out (tensor): Output with shape (..., num_cells)
         """
 
         num_cells = tf.shape(x)[-2]
-        
-        # x = self.batch_norm(x)
+        d_model = tf.shape(x)[-1]
 
-        out = self.ff1(x)
-        out = self.dropout(out, training=is_training)
-        out = self.ff2(out)
-        
-        out = self.top(out)
-
+        x = tf.reshape(x, (-1, d_model))
+        out = self.linear(x)  # shape (..., num_cells, 1)
         out = tf.reshape(out, (-1, num_cells))  # shape (..., num_cells)
 
-
-        return 
+        return out
