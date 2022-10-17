@@ -20,9 +20,7 @@ class Linear(Layer):
         """
 
         num_cells = tf.shape(x)[-2]
-        d_model = tf.shape(x)[-1]
-
-        x = tf.reshape(x, (-1, d_model))
+        
         out = self.linear(x)  # shape (..., num_cells, 1)
         out = tf.reshape(out, (-1, num_cells))  # shape (..., num_cells)
 
