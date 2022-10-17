@@ -3,7 +3,7 @@ from tensorflow.keras.layers import Layer, Dense, Dropout, LayerNormalization
 
 from model.transformer.multi_head_attention import MultiHeadAttention
 
-class DecoderBlock(Layer):
+class EncoderBlock(Layer):
     def __init__(self, d_model, n_heads, dropout, eps, d_ff, ff_activation):
         """
         Args:
@@ -15,52 +15,45 @@ class DecoderBlock(Layer):
             ff_activation (str): Activation function of the feed forward layer.
         """
         
-        super(DecoderBlock, self).__init__()
+        super(EncoderBlock, self).__init__()
         self.d_model = d_model
         self.mha = MultiHeadAttention(d_model, n_heads)
         self.norm1 = LayerNormalization(epsilon=eps)
         self.norm2 = LayerNormalization(epsilon=eps)
-        self.norm3 = LayerNormalization(epsilon=eps)
         self.dropout1 = Dropout(dropout)
         self.dropout2 = Dropout(dropout)
-        self.dropout3 = Dropout(dropout)
         self.feed_forward = tf.keras.Sequential([
             Dense(d_ff, activation=ff_activation),
             Dense(self.d_model)
         ])
 
 
-    def call(self, q, encoder_out, is_training, mask=None):
+    def call(self, x, is_training, mask=None):
         """
         Perform an encoder block.
+
         Args:
-            q (tensor): query with shape (..., seqlen, d_model)
-            encoder_out (tensor): encoder output with shape (..., seqlen, d_model)
+            x (tensor): input with shape (..., seqlen, d_model)
             is_training (bool): whether the model is being trained
             mask (tensor): mask with shape (..., seqlen)
         Returns:
             x (tensor): output with shape (..., seqlen, d_model)
         """
 
-        mha_output = self.mha(q, q, q, mask)
+        # Multi-head attention
+        mha_output = self.mha(x, x, x, mask)
         mha_output = self.dropout1(mha_output, training=is_training)
-        q = q + mha_output
-        q = self.norm1(q)
-
-        k = v = encoder_out
-
-        mha_output = self.mha(q, k, v, mask)
-        mha_output = self.dropout2(mha_output, training=is_training)
-        q = q + mha_output
-        q = self.norm2(q)
-
-        # Feed forward
-        ff_output = self.feed_forward(q)
-        ff_output = self.dropout3(ff_output, training=is_training)
 
         # Add & Norm
-        q = q + ff_output
-        q = self.norm3(q)
+        x = x + mha_output
+        x = self.norm1(x)
 
-        return q
-        
+        # Feed forward
+        ff_output = self.feed_forward(x)
+        ff_output = self.dropout2(ff_output, training=is_training)
+
+        # Add & Norm
+        x = x + ff_output
+        x = self.norm2(x)
+
+        return x

@@ -4,6 +4,8 @@ from model.notebook_encoder import NotebookEncoder
 from model.attention_pooling import AttentionPooling
 from model.positional_encoder import PositionalEncoder
 from model.decoder_layer import DecoderLayer
+from model.transformer.transformer_encoder import TransformerEncoder
+from model.transformer.transformer_decoder import TransformerDecoder
 from model.linear import Linear
 
 
@@ -33,7 +35,9 @@ class Model(tf.keras.Model):
         self.code_attention_pooling = AttentionPooling(d_model)
         self.md_attention_pooling = AttentionPooling(d_model)
         self.positional_encoder = PositionalEncoder(d_model, max_cells, dropout_pos)
-        self.decoder = DecoderLayer(num_decoder_layers, d_model, n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers)
+        # self.decoder = DecoderLayer(num_decoder_layers, d_model, n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers)
+        self.encoder = TransformerEncoder(d_model, n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers)
+        self.decoder = TransformerDecoder(d_model, n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers)
         self.linear = Linear()
 
 
@@ -63,12 +67,17 @@ class Model(tf.keras.Model):
         md_embeddings = self.md_attention_pooling(md_embeddings)  # shape (..., max_cells, d_model)
 
 
-        # TRANSFORMER DECODER
-        out = self.decoder(code_embeddings, md_embeddings, is_training)  # shape (..., max_cells, d_model)
+        # # TRANSFORMER DECODER
+        # out = self.decoder(code_embeddings, md_embeddings, is_training)  # shape (..., max_cells, d_model)
+
+
+        # TRANSFORMER BLOCK
+        encoder_out = self.encoder(code_embeddings, is_training)  # shape (..., max_cells, d_model)
+        decoder_out = self.decoder(md_embeddings, encoder_out, is_training)  # shape (..., max_cells, d_model)
 
 
         # LINEAR
-        out = self.linear(out)  # shape (..., max_cells)
+        out = self.linear(decoder_out)  # shape (..., max_cells)
         
         return out
-        
+     
