@@ -3,15 +3,16 @@ import tensorflow as tf
 from model.notebook_encoder import NotebookEncoder
 from model.attention_pooling import AttentionPooling
 from model.positional_encoder import PositionalEncoder
-from model.transformer_decoder import TransformerDecoder
+from model.decoder_layer import DecoderLayer
 from model.linear import Linear
 
 
 class Model(tf.keras.Model):
     def __init__(self, model_path, d_model, 
                 max_cells, dropout_pos,
+                num_decoder_layers,
                 n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers,
-                d_ff_pointwise, dropout_pointwise):
+                dropout_pointwise):
         """
         Args:
             model_path (str): Path of the pre-trained model.
@@ -34,8 +35,8 @@ class Model(tf.keras.Model):
         self.code_attention_pooling = AttentionPooling(d_model)
         self.md_attention_pooling = AttentionPooling(d_model)
         self.positional_encoder = PositionalEncoder(d_model, max_cells, dropout_pos)
-        self.decoder = TransformerDecoder(d_model, n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers)
-        self.linear = Linear(d_ff_pointwise, dropout_pointwise)
+        self.decoder = DecoderLayer(num_decoder_layers, d_model, n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers)
+        self.linear = Linear(dropout_pointwise)
 
 
     def call(self, code_input_ids, code_attention_mask, 
@@ -65,7 +66,7 @@ class Model(tf.keras.Model):
 
 
         # TRANSFORMER DECODER
-        out = self.decoder(md_embeddings, code_embeddings, is_training)  # shape (..., max_cells, d_model)
+        out = self.DecoderLayer(code_embeddings, md_embeddings, is_training)  # shape (..., max_cells, d_model)
 
 
         # LINEAR
