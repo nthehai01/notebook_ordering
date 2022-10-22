@@ -1,12 +1,12 @@
 import tensorflow as tf
-from tensorflow.keras.layers import Layer, Dense, Dropout, BatchNormalization
+from tensorflow.keras.layers import Layer, Dense
 
 class Linear(Layer):
     def __init__(self):
         super(Linear, self).__init__()
         self.linear = tf.keras.Sequential([
-            Dense(256, activation='relu'),
-            Dense(64, activation='relu'),
+            Dense(2048, activation='relu'),
+            Dense(512, activation='relu'),
             Dense(1, activation='sigmoid')
         ])
 

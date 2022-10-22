@@ -3,16 +3,14 @@ import tensorflow as tf
 from model.notebook_encoder import NotebookEncoder
 from model.attention_pooling import AttentionPooling
 from model.positional_encoder import PositionalEncoder
-from model.decoder_layer import DecoderLayer
-from model.transformer.transformer_encoder import TransformerEncoder
-from model.transformer.transformer_decoder import TransformerDecoder
+from model.transformer.encoder import TransformerEncoder
+from model.transformer.decoder import TransformerDecoder
 from model.linear import Linear
 
 
 class Model(tf.keras.Model):
     def __init__(self, model_path, d_model, 
                 max_cells, dropout_pos,
-                num_decoder_layers,
                 n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers):
         """
         Args:
@@ -35,7 +33,6 @@ class Model(tf.keras.Model):
         self.code_attention_pooling = AttentionPooling(d_model)
         self.md_attention_pooling = AttentionPooling(d_model)
         self.positional_encoder = PositionalEncoder(d_model, max_cells, dropout_pos)
-        # self.decoder = DecoderLayer(num_decoder_layers, d_model, n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers)
         self.encoder = TransformerEncoder(d_model, n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers)
         self.decoder = TransformerDecoder(d_model, n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers)
         self.linear = Linear()
@@ -65,10 +62,6 @@ class Model(tf.keras.Model):
         # MARKDOWN ENCODING
         md_embeddings = self.md_encoder(md_input_ids, md_attention_mask)  # shape (..., max_cells, max_len, d_model)
         md_embeddings = self.md_attention_pooling(md_embeddings)  # shape (..., max_cells, d_model)
-
-
-        # # TRANSFORMER DECODER
-        # out = self.decoder(code_embeddings, md_embeddings, is_training)  # shape (..., max_cells, d_model)
 
 
         # TRANSFORMER BLOCK

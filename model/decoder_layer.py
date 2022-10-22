@@ -1,6 +1,6 @@
 from tensorflow.keras.layers import Layer
 
-from model.transformer.transformer_decoder import TransformerDecoder
+from model.transformer.decoder import TransformerDecoder
 
 class DecoderLayer(Layer):
     def __init__(self, num_decoder_layers, d_model, n_heads, dropout, eps, d_ff, ff_activation, n_layers):
