@@ -11,7 +11,7 @@ class NotebookEncoder(Layer):
         """
         
         super(NotebookEncoder, self).__init__()
-        self.bert = TFAutoModel.from_pretrained(model_path)
+        self.bert = TFAutoModel.from_pretrained(model_path, from_pt=True)
         self.d_model = d_model
 
     

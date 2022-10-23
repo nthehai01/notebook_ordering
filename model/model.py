@@ -3,15 +3,15 @@ import tensorflow as tf
 from model.notebook_encoder import NotebookEncoder
 from model.attention_pooling import AttentionPooling
 from model.positional_encoder import PositionalEncoder
-from model.transformer.encoder import TransformerEncoder
-from model.transformer.decoder import TransformerDecoder
+from model.transformer_decoder import TransformerDecoder
 from model.linear import Linear
 
 
 class Model(tf.keras.Model):
     def __init__(self, model_path, d_model, 
                 max_cells, dropout_pos,
-                n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers):
+                n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers,
+                d_ff_pointwise, dropout_pointwise):
         """
         Args:
             model_path (str): Path of the pre-trained model.
@@ -25,6 +25,7 @@ class Model(tf.keras.Model):
             ff_activation (str): Activation function of the feed forward layer.
             n_layers (int): Number of transformer encoder blocks to be stacked.
             d_ff_pointwise (int): Dimension of the feed forward layer for the PointwiseHead.
+            dropout_pointwise (float): Dropout rate for the PointwiseHead.
         """
         
         super(Model, self).__init__()
@@ -33,9 +34,8 @@ class Model(tf.keras.Model):
         self.code_attention_pooling = AttentionPooling(d_model)
         self.md_attention_pooling = AttentionPooling(d_model)
         self.positional_encoder = PositionalEncoder(d_model, max_cells, dropout_pos)
-        self.encoder = TransformerEncoder(d_model, n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers)
         self.decoder = TransformerDecoder(d_model, n_heads, dropout_trans, eps, d_ff_trans, ff_activation, n_layers)
-        self.linear = Linear()
+        self.linear = Linear(d_ff_pointwise, dropout_pointwise)
 
 
     def call(self, code_input_ids, code_attention_mask, 
@@ -64,13 +64,12 @@ class Model(tf.keras.Model):
         md_embeddings = self.md_attention_pooling(md_embeddings)  # shape (..., max_cells, d_model)
 
 
-        # TRANSFORMER BLOCK
-        encoder_out = self.encoder(code_embeddings, is_training)  # shape (..., max_cells, d_model)
-        decoder_out = self.decoder(md_embeddings, encoder_out, is_training)  # shape (..., max_cells, d_model)
+        # TRANSFORMER DECODER
+        out = self.decoder(md_embeddings, code_embeddings, is_training)  # shape (..., max_cells, d_model)
 
 
         # LINEAR
-        out = self.linear(decoder_out)  # shape (..., max_cells)
-        
+        out = self.linear(out, is_training)  # shape (..., max_cells)
+
         return out
-     
+        

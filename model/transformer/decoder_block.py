@@ -33,6 +33,7 @@ class DecoderBlock(Layer):
     def call(self, q, encoder_out, is_training, mask=None):
         """
         Perform an encoder block.
+
         Args:
             q (tensor): query with shape (..., seqlen, d_model)
             encoder_out (tensor): encoder output with shape (..., seqlen, d_model)
@@ -43,15 +44,15 @@ class DecoderBlock(Layer):
         """
 
         mha_output = self.mha(q, q, q, mask)
-        mha_output = self.dropout1(mha_output, training=is_training)
         q = q + mha_output
+        q = self.dropout1(q, training=is_training)
         q = self.norm1(q)
 
         k = v = encoder_out
 
         mha_output = self.mha(q, k, v, mask)
-        mha_output = self.dropout2(mha_output, training=is_training)
         q = q + mha_output
+        mha_output = self.dropout2(mha_output, training=is_training)
         q = self.norm2(q)
 
         # Feed forward
@@ -63,4 +64,3 @@ class DecoderBlock(Layer):
         q = self.norm3(q)
 
         return q
-        
